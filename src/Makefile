@@ -20,3 +20,6 @@ input.o : input.f90
 gmh.o : gmh.f90 input.o
 	$(FC) $(FFLAGS) $(LINAL) -o gmh.o gmh.f90 input.o
 
+clean:
+	rm *.o *.mod
+
