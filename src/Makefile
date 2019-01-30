@@ -3,7 +3,7 @@ export FC = ifort
 export FFLAGS = -O3
 export LINAL =
 export MKL = /apps/compilers/intel/2018/1.163/compilers_and_libraries_2018.1.163/linux/mkl/lib/intel64_lin
-export bindir = /home/james.thorpe/bin/myGMH/bin
+export bindir = ../bin
 
 #both
 export pwd = $(shell pwd)

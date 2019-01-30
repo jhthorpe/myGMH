@@ -16,13 +16,14 @@ CONTAINS
 !       -reads input files for GMH calculation
 !---------------------------------------------------------------------
 !Variables
-! nstates             : int, number of states
-! u_mat               : 2D real*8, matrix of adiabatic dipole moments...
+! nstates               : int, number of states
+! u_mat                 : 2D real*8, matrix of adiabatic dipole moments...
 !                                  projected onto average of dipole ...
 !                                  difference vectors
-! E_mat               : 1D real*8, matrix of adiabatic (vertical?) energies
-! diab_mat            : 2D int, matrix that connects the various diabatic
+! E_mat                 : 1D real*8, matrix of adiabatic (vertical?) energies
+! diab_mat              : 2D int, matrix that connects the various diabatic
 !                               states
+! dipoles		: 3D real*8, unprojected dipole moments
 
   SUBROUTINE read_input(nstates,u_mat,E_mat,diab_mat,flag)
     IMPLICIT NONE
@@ -35,6 +36,7 @@ CONTAINS
     LOGICAL, INTENT(INOUT) :: flag
 
     !Internal
+    REAL(KIND=8), ALLOCATABLE, DIMENSION(:,:,:) :: dipoles
     INTEGER :: id
     WRITE(*,*) "Reading input file"
 
@@ -49,9 +51,15 @@ CONTAINS
     ALLOCATE(u_mat(0:nstates-1,0:2))
     ALLOCATE(E_mat(0:nstates-1))
     ALLOCATE(diab_mat(0:nstates-1,0:nstates-1))
+    ALLOCATE(dipoles(0:nstates-1,0:nstates-1,0:2))
     READ(id,*) 
     CALL read_diab_mat(id,diab_mat,nstates) 
-    CLOSE(unit=100)
+    CLOSE(unit=id)
+
+    id = 101
+    OPEN(file='dipole.data',unit=id,status='old')
+    CALL read_dipole(id,dipoles,nstates)
+    CLOSE(unit=id)
 
   END SUBROUTINE read_input  
 !---------------------------------------------------------------------
@@ -87,6 +95,7 @@ CONTAINS
     flag = .FALSE.
   
   END SUBROUTINE check_files
+
 !---------------------------------------------------------------------
 ! read_diab_mat
 !       James H. Thorpe
@@ -102,7 +111,7 @@ CONTAINS
     IMPLICIT NONE
      
     !inout
-    INTEGER, ALLOCATABLE, DIMENSION(:,:), INTENT(INOUT) :: diab_mat
+    INTEGER, DIMENSION(:,:), INTENT(INOUT) :: diab_mat
     INTEGER, INTENT(IN) :: nstates,id
    
     !internal 
@@ -130,6 +139,63 @@ CONTAINS
     END DO 
 
   END SUBROUTINE read_diab_mat
+
+!---------------------------------------------------------------------
+! read_dipole
+!	James H. Thorpe
+!	-reads in unprojected dipole moments in lower-triangular form 
+!---------------------------------------------------------------------
+! Variables
+! id		: int, read file unit
+! dipoles	: 3D real*8, unprojected dipoles
+! nstates	: int, number of states
+
+  SUBROUTINE read_dipole(id,dipoles,nstates)
+    IMPLICIT NONE
+
+    !inout
+    REAL(KIND=8), DIMENSION(:,:,:), INTENT(INOUT) :: dipoles
+    INTEGER, INTENT(IN) :: nstates,id
+    
+    !internal
+    INTEGER :: i,j,k
+
+    DO k=0,2
+
+      !read each one
+      DO i=0,nstates-1
+        READ(id,*) dipoles(i,0:i,k)
+      END DO
+
+      !flip
+      DO i=0,nstates-1
+        DO j=i,nstates-1
+          dipoles(i,j,k) = dipoles(j,i,k)
+        END DO
+      END DO
+
+      !blank line
+      IF (k .LT. 2) READ(id,*)
+    END DO 
+
+    !print
+    WRITE(*,*) 
+    WRITE(*,*) "X component of dipole moments:"
+    DO i=0,nstates-1
+      WRITE(*,*) dipoles(i,0:nstates-1,0) 
+    END DO 
+    WRITE(*,*) 
+    WRITE(*,*) "Y component of dipole moments:"
+    DO i=0,nstates-1
+      WRITE(*,*) dipoles(i,0:nstates-1,1) 
+    END DO 
+    WRITE(*,*) 
+    WRITE(*,*) "Z component of dipole moments:"
+    DO i=0,nstates-1
+      WRITE(*,*) dipoles(i,0:nstates-1,2) 
+    END DO 
+
+  END SUBROUTINE read_dipole
 !---------------------------------------------------------------------
 
 END MODULE input
