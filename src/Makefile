@@ -1,18 +1,24 @@
 #hipergator
-export FC = ifort
+#export FC = ifort
+#export FFLAGS = -O3
+#export LINAL =
+#export MKL = /apps/compilers/intel/2018/1.163/compilers_and_libraries_2018.1.163/linux/mkl/lib/intel64_lin
+
+#local
+export FC = gfortran
 export FFLAGS = -O3
-export LINAL =
-export MKL = /apps/compilers/intel/2018/1.163/compilers_and_libraries_2018.1.163/linux/mkl/lib/intel64_lin
-export bindir = ../bin
+export LINAL = -L/Users/jamesthorpe/LAPACK/lapack-3.7.0 -llapack -lblas
 
 #both
-export pwd = $(shell pwd)
-export ML= $(pwd)/linal
+export bindir = ../bin
 
-objects = gmh.o input.o project.o
+objects = gmh.o input.o project.o coupling.o
 
 all: $(objects)
 	cp gmh.o $(bindir)/gmh
+
+coupling.o : coupling.f90
+	$(FC) $(FFLAGS) $(LINAL) -c coupling.f90 
 
 project.o : project.f90
 	$(FC) $(FFLAGS) -c project.f90 
@@ -20,8 +26,8 @@ project.o : project.f90
 input.o : input.f90 project.o
 	$(FC) $(FFLAGS) -c input.f90 project.o
 
-gmh.o : gmh.f90 input.o project.o
-	$(FC) $(FFLAGS) $(LINAL) -o gmh.o gmh.f90 input.o project.o
+gmh.o : gmh.f90 input.o project.o coupling.o
+	$(FC) $(FFLAGS) $(LINAL) -o gmh.o gmh.f90 input.o project.o coupling.o
 
 clean:
 	rm *.o *.mod

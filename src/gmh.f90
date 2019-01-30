@@ -19,15 +19,16 @@
 ! E_mat               : 1D real*8, matrix of adiabatic energies
 ! diab_mat            : 2D int, matrix that connects the various diabatic
 !                               states
+! Hab			: 2D real*8, diabatic hamiltonian
 
 PROGRAM gmh
   USE input
+  USE coupling
   !USE linal
-  !USE calc
   IMPLICIT NONE
 
   !Internal
-  REAL(KIND=8), ALLOCATABLE, DIMENSION(:,:) :: u_mat
+  REAL(KIND=8), ALLOCATABLE, DIMENSION(:,:) :: u_mat, Hab
   REAL(KIND=8), ALLOCATABLE, DIMENSION(:) :: E_mat
   INTEGER, ALLOCATABLE, DIMENSION(:,:) :: diab_mat 
   INTEGER :: nstates
@@ -36,6 +37,8 @@ PROGRAM gmh
   CALL print_start()
   CALL read_input(nstates,u_mat,E_mat,diab_mat,flag)
   IF (flag) STOP 1
+  ALLOCATE(Hab(0:nstates-1,0:nstates-1))
+  CALL calc_Hab(Hab,nstates,u_mat,E_mat,diab_mat,flag)
 
 CONTAINS
   
@@ -47,7 +50,10 @@ CONTAINS
   SUBROUTINE print_start()
     IMPLICIT NONE
     WRITE(*,*) 
-    WRITE(*,*) "Beging GMH calculation"
+    WRITE(*,*) "myGMH"
+    WRITE(*,*) "James H. Thorpe"
+    WRITE(*,*) "Stanton group, UF"
+    WRITE(*,*) 
 
   END SUBROUTINE print_start
   

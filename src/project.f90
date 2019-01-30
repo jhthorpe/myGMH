@@ -25,17 +25,20 @@ MODULE project
 ! ntrans	: int, number of adiabat transitions
 ! udiff		: 1D real*8, averaged dipole difference
 
-  SUBROUTINE project_dipoles(dipoles,u_mat,nstates,diab_mat)
+  SUBROUTINE project_dipoles(dipoles,u_mat,nstates,diab_mat,flag)
     IMPLICIT NONE
     !inout
-    REAL(KIND=8), DIMENSION(:,:), INTENT(INOUT) :: u_mat
-    REAL(KIND=8), DIMENSION(:,:,:), INTENT(IN) :: dipoles
-    INTEGER, DIMENSION(:,:), INTENT(IN) :: diab_mat
+    REAL(KIND=8), DIMENSION(0:,0:), INTENT(INOUT) :: u_mat
+    REAL(KIND=8), DIMENSION(0:,0:,0:), INTENT(IN) :: dipoles
+    INTEGER, DIMENSION(0:,0:), INTENT(IN) :: diab_mat
+    LOGICAL, INTENT(INOUT) :: flag 
     INTEGER, INTENT(IN) :: nstates
     !internal
     REAL(KIND=8), DIMENSION(0:2) :: udiff
     INTEGER :: ntrans
     INTEGER :: i,j,k
+
+    flag = .FALSE.
 
     !build average dipole difference
     ntrans = 0
@@ -51,10 +54,16 @@ MODULE project
     END DO 
     udiff  = udiff/(1.0D0*ntrans)
 
+    IF (MAXVAL(udiff) .LT. 1.0D-16) THEN
+      WRITE(*,*) "average adiabat dipole differences vector is 0"
+      flag = .TRUE.  
+      RETURN
+    END IF
+
     !print average dipole differences vector
     WRITE(*,*)
     WRITE(*,*) "Number of adiabatic transfers:",ntrans
-    WRITE(*,*) "Average dipole differences vector:"
+    WRITE(*,*) "Average adiabat dipole differences vector:"
     WRITE(*,*) "X:", udiff(0)
     WRITE(*,*) "Y:", udiff(1)
     WRITE(*,*) "Z:", udiff(2)
@@ -66,7 +75,7 @@ MODULE project
     END DO
 
     WRITE(*,*) 
-    WRITE(*,*) "Dipoles projected on average dipole difference vector:"
+    WRITE(*,*) "Dipoles projected on average adiabat dipole difference vector:"
     DO i=0,nstates-1 
       WRITE(*,*) u_mat(i,0:nstates-1)
     END DO

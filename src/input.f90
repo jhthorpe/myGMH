@@ -25,6 +25,7 @@ CONTAINS
 ! diab_mat              : 2D int, matrix that connects the various diabatic
 !                               states
 ! dipoles		: 3D real*8, unprojected dipole moments
+! Hab			: 2D real*8, diabatic matrix
 
   SUBROUTINE read_input(nstates,u_mat,E_mat,diab_mat,flag)
     IMPLICIT NONE
@@ -45,11 +46,12 @@ CONTAINS
     CALL check_files(flag)
     IF (flag) RETURN
 
+    !get states and coupling information
     id = 100
     OPEN(file='gmh.data',unit=id,status='old')
     READ(id,*) nstates
     WRITE(*,*) "Number of states: ", nstates
-    ALLOCATE(u_mat(0:nstates-1,0:2))
+    ALLOCATE(u_mat(0:nstates-1,0:nstates-1))
     ALLOCATE(E_mat(0:nstates-1))
     ALLOCATE(diab_mat(0:nstates-1,0:nstates-1))
     ALLOCATE(dipoles(0:nstates-1,0:nstates-1,0:2))
@@ -57,11 +59,22 @@ CONTAINS
     CALL read_diab_mat(id,diab_mat,nstates) 
     CLOSE(unit=id)
 
+    !get adiabatic energies
+    id = 102
+    OPEN(file='adiabat.data',unit=id,status='old')
+    CALL read_adiabat(id,E_mat,nstates)
+    CLOSE(unit=id)
+
+    !get dipole moments
     id = 101
     OPEN(file='dipole.data',unit=id,status='old')
     CALL read_dipole(id,dipoles,nstates)
     CLOSE(unit=id)
-    CALL project_dipoles(dipoles,u_mat,nstates,diab_mat)
+    CALL project_dipoles(dipoles,u_mat,nstates,diab_mat,flag)
+    IF (flag) RETURN
+
+
+    DEALLOCATE(dipoles)
 
   END SUBROUTINE read_input  
 !---------------------------------------------------------------------
@@ -113,12 +126,15 @@ CONTAINS
     IMPLICIT NONE
      
     !inout
-    INTEGER, DIMENSION(:,:), INTENT(INOUT) :: diab_mat
+    INTEGER, DIMENSION(0:,0:), INTENT(INOUT) :: diab_mat
     INTEGER, INTENT(IN) :: nstates,id
    
     !internal 
     INTEGER :: i,j,k 
    
+    WRITE(*,*)
+    WRITE(*,*) "----------------------------------------------"
+    WRITE(*,*) "                  COUPLINGS                   "
     WRITE(*,*) 
     WRITE(*,*) "Coupling matrix:" 
     diab_mat = 0
@@ -156,11 +172,14 @@ CONTAINS
     IMPLICIT NONE
 
     !inout
-    REAL(KIND=8), DIMENSION(:,:,:), INTENT(INOUT) :: dipoles
+    REAL(KIND=8), DIMENSION(0:,0:,0:), INTENT(INOUT) :: dipoles
     INTEGER, INTENT(IN) :: nstates,id
     
     !internal
     INTEGER :: i,j,k
+    WRITE(*,*) 
+    WRITE(*,*) "----------------------------------------------"
+    WRITE(*,*) "                  DIPOLES                     "
 
     DO k=0,2
 
@@ -198,6 +217,44 @@ CONTAINS
     END DO 
 
   END SUBROUTINE read_dipole
+
+!---------------------------------------------------------------------
+!	read_adiabat
+!		James H. Thorpe
+!	-reads in adiabatic energies from adiabat.data
+!---------------------------------------------------------------------
+  SUBROUTINE read_adiabat(id,E_mat,nstates)
+    IMPLICIT NONE
+
+    !INOUT
+    REAL(KIND=8), DIMENSION(0:), INTENT(INOUT) :: E_mat
+    INTEGER, INTENT(IN) :: nstates,id
+
+    !INTERNAL
+    REAL(KIND=8), ALLOCATABLE, DIMENSION(:,:) :: dummy
+    INTEGER :: i
+
+    WRITE(*,*) 
+    WRITE(*,*) "----------------------------------------------"
+    WRITE(*,*) "                  ADIABATS                    "
+    WRITE(*,*) 
+    WRITE(*,*) "Adiabatic energies:"
+
+    ALLOCATE(dummy(0:nstates-1,0:nstates-1))
+    dummy = 0
+ 
+    DO i=0,nstates-1
+      READ(id,*) E_mat(i)
+      dummy(i,i) = E_mat(i)
+    END DO
+
+    DO i=0,nstates-1
+      WRITE(*,*) dummy(i,0:nstates-1)
+    END DO
+
+    DEALLOCATE(dummy)
+
+  END SUBROUTINE read_adiabat
 !---------------------------------------------------------------------
 
 END MODULE input
