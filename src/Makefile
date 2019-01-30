@@ -9,16 +9,19 @@ export bindir = ../bin
 export pwd = $(shell pwd)
 export ML= $(pwd)/linal
 
-objects = gmh.o input.o
+objects = gmh.o input.o project.o
 
 all: $(objects)
 	cp gmh.o $(bindir)/gmh
 
-input.o : input.f90
-	$(FC) $(FFLAGS) -c input.f90
+project.o : project.f90
+	$(FC) $(FFLAGS) -c project.f90 
 
-gmh.o : gmh.f90 input.o
-	$(FC) $(FFLAGS) $(LINAL) -o gmh.o gmh.f90 input.o
+input.o : input.f90 project.o
+	$(FC) $(FFLAGS) -c input.f90 project.o
+
+gmh.o : gmh.f90 input.o project.o
+	$(FC) $(FFLAGS) $(LINAL) -o gmh.o gmh.f90 input.o project.o
 
 clean:
 	rm *.o *.mod

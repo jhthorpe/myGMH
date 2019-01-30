@@ -7,6 +7,7 @@
 !//////////////////////////////////////////////////////////////////
 
 MODULE input
+  USE project
   IMPLICIT NONE
 
 CONTAINS
@@ -60,6 +61,7 @@ CONTAINS
     OPEN(file='dipole.data',unit=id,status='old')
     CALL read_dipole(id,dipoles,nstates)
     CLOSE(unit=id)
+    CALL project_dipoles(dipoles,u_mat,nstates,diab_mat)
 
   END SUBROUTINE read_input  
 !---------------------------------------------------------------------
