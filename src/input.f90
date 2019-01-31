@@ -56,8 +56,9 @@ CONTAINS
     ALLOCATE(diab_mat(0:nstates-1,0:nstates-1))
     ALLOCATE(dipoles(0:nstates-1,0:nstates-1,0:2))
     READ(id,*) 
-    CALL read_diab_mat(id,diab_mat,nstates) 
+    CALL read_diab_mat(id,diab_mat,nstates,flag) 
     CLOSE(unit=id)
+    IF (flag) RETURN
 
     !get adiabatic energies
     id = 102
@@ -121,16 +122,20 @@ CONTAINS
 ! id            : int, read file unit
 ! diab_mat      : 2D int, diabatic connection matrix
 ! nstates       : int, number of states
+! flag		: bool, for errors
 
-  SUBROUTINE read_diab_mat(id,diab_mat,nstates)
+  SUBROUTINE read_diab_mat(id,diab_mat,nstates,flag)
     IMPLICIT NONE
      
     !inout
     INTEGER, DIMENSION(0:,0:), INTENT(INOUT) :: diab_mat
+    LOGICAL, INTENT(INOUT) :: flag
     INTEGER, INTENT(IN) :: nstates,id
    
     !internal 
     INTEGER :: i,j,k 
+
+    flag = .FALSE.
    
     WRITE(*,*)
     WRITE(*,*) "----------------------------------------------"
@@ -155,6 +160,14 @@ CONTAINS
     DO i=0,nstates-1
       WRITE(*,*) diab_mat(i,0:nstates-1) 
     END DO 
+
+    DO i=0,nstates-1
+      DO j=0,nstates-1
+        IF (diab_mat(i,j) .NE. 0 .AND. diab_mat(i,j) .NE. 1) flag = .TRUE.
+      END DO
+    END DO
+
+    IF (flag) WRITE(*,*) "Please use only 1's and 0's in your coupling matrix"
 
   END SUBROUTINE read_diab_mat
 
