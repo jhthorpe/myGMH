@@ -52,6 +52,11 @@ MODULE project
         END IF
       END DO
     END DO 
+    IF (ntrans .LE. 0) THEN
+      WRITE(*,*) "You have no adiabatic transitions allowed"
+      flag = .TRUE.
+      RETURN
+    END IF
     udiff  = udiff/(1.0D0*ntrans)
 
     IF (MAXVAL(udiff) .LT. 1.0D-16) THEN
@@ -64,20 +69,23 @@ MODULE project
     WRITE(*,*)
     WRITE(*,*) "Number of adiabatic transfers:",ntrans
     WRITE(*,*) "Average adiabat dipole differences vector:"
-    WRITE(*,*) "X:", udiff(0)
-    WRITE(*,*) "Y:", udiff(1)
-    WRITE(*,*) "Z:", udiff(2)
+    WRITE(*,'(2x,A2,999(F15.10))') "X:", udiff(0)
+    WRITE(*,'(2x,A2,999(F15.10))') "Y:", udiff(1)
+    WRITE(*,'(2x,A2,999(F15.10))') "Z:", udiff(2)
 
     DO i=0,nstates-1
       DO j=0,nstates-1
         u_mat(i,j) = scalar_proj(dipoles(i,j,0:2),udiff(0:2))
       END DO
     END DO
+    
+    !kill off states from diab_mat - This is now handled in the diagonalization
+    !u_mat = u_mat * diab_mat
 
     WRITE(*,*) 
-    WRITE(*,*) "Dipoles projected on average adiabat dipole difference vector:"
+    WRITE(*,*) "Dipoles projected on <Δμ12> :" 
     DO i=0,nstates-1 
-      WRITE(*,*) u_mat(i,0:nstates-1)
+      WRITE(*,'(999(F15.10))') u_mat(i,0:nstates-1)
     END DO
 
   END SUBROUTINE project_dipoles

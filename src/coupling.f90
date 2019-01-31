@@ -7,6 +7,7 @@
 !//////////////////////////////////////////////////////////////////
 
 MODULE coupling
+  USE hcbd
   IMPLICIT NONE
 
   CONTAINS
@@ -37,7 +38,11 @@ MODULE coupling
     LOGICAL, INTENT(INOUT) :: flag
 
     !internal
-    REAL(KIND=8), ALLOCATABLE, DIMENSION(:,:) :: S_mat
+    REAL(KIND=8), ALLOCATABLE, DIMENSION(:,:) :: S_mat,int_mat,dummy,A
+    INTEGER :: info
+    INTEGER :: i,j
+
+    flag = .FALSE.
 
     WRITE(*,*) 
     WRITE(*,*) "----------------------------------------------"
@@ -46,16 +51,49 @@ MODULE coupling
     WRITE(*,*) "Calculating diabatic Hamiltonian"
 
     ALLOCATE(S_mat(0:nstates-1,0:nstates-1))
+    ALLOCATE(int_mat(0:nstates-1,0:nstates-1))
+    ALLOCATE(dummy(0:nstates-1,0:nstates-1))
+    ALLOCATE(A(0:nstates-1,0:nstates-1))
     S_mat = 0
+    dummy = 0
+    DO i=0,nstates-1
+      dummy(i,i) = E_mat(i)
+    END DO
+    A = u_mat
 
     !1) Diagonalize the dipoles
     WRITE(*,*)
     WRITE(*,*) "Diagonalizing dipole matrix to μab = 0"
-    CALL diag_mat(nstates,u_mat,S_mat)
+
+    !CALL diag_mat(nstates,u_mat,S_mat) LAPACK full diagonalization
+
+    CALL block_diag(nstates,diab_mat,A,S_mat,info)
+    IF (info .NE. 0) THEN
+      WRITE(*,*) "block_diag did not work"
+      flag = .TRUE.
+      RETURN
+    END IF
+    WRITE(*,*) 
+    WRITE(*,*) "Block Diagonalized μ matrix:"
+    DO i=0,nstates-1
+      WRITE(*,'(999(F15.10))') A(i,0:nstates-1)
+    END DO
+    WRITE(*,*) 
+    WRITE(*,*) "Transformation matrix:"
+    DO i=0,nstates-1
+      WRITE(*,'(999(F15.10))') S_mat(i,0:nstates-1)
+    END DO
     
     !2) Use transform matrix to get diabatic hamiltonian
+    CALL linal_xy_2Dreal8(nstates,nstates,nstates,dummy,TRANSPOSE(S_mat),int_mat) 
+    CALL linal_xy_2Dreal8(nstates,nstates,nstates,S_mat,int_mat,Hab) 
 
     !3) print and save
+    WRITE(*,*) 
+    WRITE(*,*) "GMH Diabatic Hamiltonian"
+    DO i=0,nstates-1
+      WRITE(*,'(999(F15.10))') Hab(i,0:nstates-1)
+    END DO
 
 
   END SUBROUTINE calc_Hab
@@ -222,7 +260,6 @@ MODULE coupling
             Y(0:n3-1,0:n2-1),n3,0.0D0,Z(0:n1-1,0:n2-1),n1)
 
   END SUBROUTINE linal_xy_2Dreal8
-
 !---------------------------------------------------------------------
 
 END MODULE coupling

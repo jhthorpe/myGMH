@@ -203,17 +203,17 @@ CONTAINS
     WRITE(*,*) 
     WRITE(*,*) "X component of dipole moments:"
     DO i=0,nstates-1
-      WRITE(*,*) dipoles(i,0:nstates-1,0) 
+      WRITE(*,'(999(F15.10))') dipoles(i,0:nstates-1,0) 
     END DO 
     WRITE(*,*) 
     WRITE(*,*) "Y component of dipole moments:"
     DO i=0,nstates-1
-      WRITE(*,*) dipoles(i,0:nstates-1,1) 
+      WRITE(*,'(999(F15.10))') dipoles(i,0:nstates-1,1) 
     END DO 
     WRITE(*,*) 
     WRITE(*,*) "Z component of dipole moments:"
     DO i=0,nstates-1
-      WRITE(*,*) dipoles(i,0:nstates-1,2) 
+      WRITE(*,'(999(F15.10))') dipoles(i,0:nstates-1,2) 
     END DO 
 
   END SUBROUTINE read_dipole
@@ -249,7 +249,7 @@ CONTAINS
     END DO
 
     DO i=0,nstates-1
-      WRITE(*,*) dummy(i,0:nstates-1)
+      WRITE(*,'(999(F15.10))') dummy(i,0:nstates-1)
     END DO
 
     DEALLOCATE(dummy)
