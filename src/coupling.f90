@@ -39,6 +39,7 @@ MODULE coupling
 
     !internal
     REAL(KIND=8), ALLOCATABLE, DIMENSION(:,:) :: S_mat,int_mat,dummy,A
+    INTEGER, ALLOCATABLE, DIMENSION(:,:) :: one
     INTEGER :: info
     INTEGER :: i,j
 
@@ -54,8 +55,10 @@ MODULE coupling
     ALLOCATE(int_mat(0:nstates-1,0:nstates-1))
     ALLOCATE(dummy(0:nstates-1,0:nstates-1))
     ALLOCATE(A(0:nstates-1,0:nstates-1))
+    ALLOCATE(one(0:nstates-1,0:nstates-1))
     S_mat = 0
     dummy = 0
+    one = 1
     DO i=0,nstates-1
       dummy(i,i) = E_mat(i)
     END DO
@@ -64,37 +67,66 @@ MODULE coupling
     !1) Diagonalize the dipoles
     WRITE(*,*)
     WRITE(*,*) "Diagonalizing dipole matrix to μab = 0"
-
     !CALL diag_mat(nstates,u_mat,S_mat) LAPACK full diagonalization
-
-    CALL block_diag(nstates,diab_mat,A,S_mat,info)
+    CALL block_diag(nstates,one,A,S_mat,info)
     IF (info .NE. 0) THEN
-      WRITE(*,*) "block_diag did not work"
       flag = .TRUE.
       RETURN
     END IF
     WRITE(*,*) 
-    WRITE(*,*) "Block Diagonalized μ matrix:"
+    WRITE(*,*) "Fully Diagonalized μ matrix:"
     DO i=0,nstates-1
       WRITE(*,'(999(F15.10))') A(i,0:nstates-1)
     END DO
-    WRITE(*,*) 
-    WRITE(*,*) "Transformation matrix:"
-    DO i=0,nstates-1
-      WRITE(*,'(999(F15.10))') S_mat(i,0:nstates-1)
-    END DO
+    !WRITE(*,*) 
+    !WRITE(*,*) "Transformation matrix:"
+    !DO i=0,nstates-1
+    !  WRITE(*,'(999(F15.10))') S_mat(i,0:nstates-1)
+    !END DO
     
-    !2) Use transform matrix to get diabatic hamiltonian
+    !2) Use transform matrix to get fully diabatic hamiltonian
     CALL linal_xy_2Dreal8(nstates,nstates,nstates,dummy,TRANSPOSE(S_mat),int_mat) 
     CALL linal_xy_2Dreal8(nstates,nstates,nstates,S_mat,int_mat,Hab) 
-
-    !3) print and save
     WRITE(*,*) 
-    WRITE(*,*) "GMH Diabatic Hamiltonian"
+    WRITE(*,*) "Fully Diabatic Hamiltonian"
     DO i=0,nstates-1
       WRITE(*,'(999(F15.10))') Hab(i,0:nstates-1)
     END DO
 
+    !3) Get locally adiabatic GMH diabats
+    WRITE(*,*) "----------------------------------------------"
+    WRITE(*,*) "               GMH DIABATS                    "
+
+    !block diagonalize  diabatic Hamiltonian
+    CALL block_diag(nstates,ABS(one-diab_mat),Hab,S_mat,info)
+    IF (info .NE. 0) THEN
+      flag = .TRUE.
+      RETURN
+    END IF
+    WRITE(*,*) 
+    WRITE(*,*) "GMH (locally-adiabatic) Diabatic Hamiltonian"
+    DO i=0,nstates-1
+      WRITE(*,'(999(F15.10))') Hab(i,0:nstates-1)
+    END DO 
+    WRITE(*,*) 
+    WRITE(*,*) "Original Adiabatic Hamiltonian"
+    DO i=0,nstates-1
+      WRITE(*,'(999(F15.10))') dummy(i,0:nstates-1)
+    END DO
+
+    !transform dipole matrix
+    CALL linal_xy_2Dreal8(nstates,nstates,nstates,A,TRANSPOSE(S_mat),int_mat) 
+    CALL linal_xy_2Dreal8(nstates,nstates,nstates,S_mat,int_mat,dummy) 
+    WRITE(*,*) 
+    WRITE(*,*) "GMH Dipole Matrix"
+    DO i=0,nstates-1
+      WRITE(*,'(999(F15.10))') dummy(i,0:nstates-1)
+    END DO
+    WRITE(*,*)
+    WRITE(*,*) "Original Dipole Matrix"
+    DO i=0,nstates-1
+      WRITE(*,'(999(F15.10))') u_mat(i,0:nstates-1)
+    END DO
 
   END SUBROUTINE calc_Hab
 !---------------------------------------------------------------------

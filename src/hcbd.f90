@@ -100,6 +100,7 @@ MODULE hcbd
     DO i=0,n-1
       DO j=i+1,n-1
         conv = conv + 2*(A(i,j)**2.0D0)*blocks(i,j)
+        IF (ABS(A(i,j))*blocks(i,j) .GT. 1.0D-15) conv = conv + 100
       END DO 
     END DO
     

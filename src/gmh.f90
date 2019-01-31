@@ -39,6 +39,7 @@ PROGRAM gmh
   IF (flag) STOP 1
   ALLOCATE(Hab(0:nstates-1,0:nstates-1))
   CALL calc_Hab(Hab,nstates,u_mat,E_mat,diab_mat,flag)
+  WRITE(*,*) 
 
 CONTAINS
   

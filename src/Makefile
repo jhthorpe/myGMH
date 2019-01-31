@@ -18,7 +18,7 @@ all: $(objects)
 	cp gmh.o $(bindir)/gmh
 
 hcbd.o : hcbd.f90
-	$(FC) $(FFLAGS) $(LINAL) -c hcbd.f90
+	$(FC) $(FFLAGS) -c hcbd.f90
 
 coupling.o : coupling.f90 hcbd.o
 	$(FC) $(FFLAGS) $(LINAL) -c coupling.f90 hcbd.o 
