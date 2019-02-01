@@ -67,8 +67,9 @@ MODULE coupling
     !1) Diagonalize the dipoles
     WRITE(*,*)
     WRITE(*,*) "Diagonalizing dipole matrix to μab = 0"
-    !CALL diag_mat(nstates,u_mat,S_mat) LAPACK full diagonalization
-    CALL block_diag(nstates,one,A,S_mat,info)
+    !CALL diag_mat(nstates,u_mat,S_mat) !LAPACK full diagonalization
+    CALL diag_mat(nstates,A,S_mat) !LAPACK full diagonalization
+    !CALL block_diag(nstates,one,A,S_mat,info)
     IF (info .NE. 0) THEN
       flag = .TRUE.
       RETURN
@@ -78,15 +79,15 @@ MODULE coupling
     DO i=0,nstates-1
       WRITE(*,'(999(F15.10))') A(i,0:nstates-1)
     END DO
-    !WRITE(*,*) 
-    !WRITE(*,*) "Transformation matrix:"
-    !DO i=0,nstates-1
-    !  WRITE(*,'(999(F15.10))') S_mat(i,0:nstates-1)
-    !END DO
+    WRITE(*,*) 
+    WRITE(*,*) "Transformation matrix:"
+    DO i=0,nstates-1
+      WRITE(*,'(999(F15.10))') S_mat(i,0:nstates-1)
+    END DO
     
     !2) Use transform matrix to get fully diabatic hamiltonian
-    CALL linal_xy_2Dreal8(nstates,nstates,nstates,dummy,TRANSPOSE(S_mat),int_mat) 
-    CALL linal_xy_2Dreal8(nstates,nstates,nstates,S_mat,int_mat,Hab) 
+    CALL linal_xy_2Dreal8(nstates,nstates,nstates,dummy,S_mat,int_mat) 
+    CALL linal_xy_2Dreal8(nstates,nstates,nstates,TRANSPOSE(S_mat),int_mat,Hab) 
     WRITE(*,*) 
     WRITE(*,*) "Fully Diabatic Hamiltonian"
     DO i=0,nstates-1
@@ -115,8 +116,8 @@ MODULE coupling
     END DO
 
     !transform dipole matrix
-    CALL linal_xy_2Dreal8(nstates,nstates,nstates,A,TRANSPOSE(S_mat),int_mat) 
-    CALL linal_xy_2Dreal8(nstates,nstates,nstates,S_mat,int_mat,dummy) 
+    CALL linal_xy_2Dreal8(nstates,nstates,nstates,A,S_mat,int_mat) 
+    CALL linal_xy_2Dreal8(nstates,nstates,nstates,TRANSPOSE(S_mat),int_mat,dummy) 
     WRITE(*,*) 
     WRITE(*,*) "GMH Dipole Matrix"
     DO i=0,nstates-1
@@ -165,7 +166,7 @@ MODULE coupling
     A = mat
 
     !diagonalize
-    CALL DSYEV('V','L',n,A(0:n-1,0:n-1),n,W,WORK(0:LWORK-1),LWORK,INFO)
+    CALL DSYEV('V','U',n,A(0:n-1,0:n-1),n,W,WORK(0:LWORK-1),LWORK,INFO)
     dummy = 0
     WRITE(*,*)
     WRITE(*,*) "Eigenvalues matrix:"

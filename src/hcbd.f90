@@ -46,7 +46,7 @@ MODULE hcbd
     !initialize
     V = 0
     DO i=0,n-1
-      V(i,i) = 1
+      V(i,i) = 1.0D0
     END DO 
 
     DO i=0,49 !max of 50 sweeps
@@ -194,6 +194,8 @@ MODULE hcbd
           DO r=0,n-1
             g = V(r,p)
             h = V(r,q)
+            !g = V(r,q)
+            !h = V(r,p)
             V(r,p) = g - s*(h + ta*g) 
             V(r,q) = h + s*(g - ta*h)
           END DO

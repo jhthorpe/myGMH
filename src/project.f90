@@ -42,24 +42,21 @@ MODULE project
 
     !build average dipole difference
     ntrans = 0
-    DO i=0,nstates-1
+    udiff = 0
+    DO i=0,nstates-2
       DO j=i+1,nstates-1
-        IF (diab_mat(i,j) .NE. 0) THEN
           ntrans = ntrans + 1
-          udiff(0) = udiff(0) + dipoles(j,j,0) - dipoles(i,i,0) 
-          udiff(1) = udiff(1) + dipoles(j,j,1) - dipoles(i,i,1) 
-          udiff(2) = udiff(2) + dipoles(j,j,2) - dipoles(i,i,2) 
-        END IF
+          udiff(0) = udiff(0) + dipoles(i,i,0) - dipoles(j,j,0) 
+          udiff(1) = udiff(1) + dipoles(i,i,1) - dipoles(j,j,1) 
+          udiff(2) = udiff(2) + dipoles(i,i,2) - dipoles(j,j,2) 
+          !udiff(0) = udiff(0) + (dipoles(j,j,0) - dipoles(i,i,0)) 
+          !udiff(1) = udiff(1) + (dipoles(j,j,1) - dipoles(i,i,1))
+          !udiff(2) = udiff(2) + (dipoles(j,j,2) - dipoles(i,i,2))
       END DO
     END DO 
-    IF (ntrans .LE. 0) THEN
-      WRITE(*,*) "You have no adiabatic transitions allowed"
-      flag = .TRUE.
-      RETURN
-    END IF
     udiff  = udiff/(1.0D0*ntrans)
 
-    IF (MAXVAL(udiff) .LT. 1.0D-16) THEN
+    IF (MAXVAL(ABS(udiff)) .LT. 1.0D-16) THEN
       WRITE(*,*) "average adiabat dipole differences vector is 0"
       flag = .TRUE.  
       RETURN
@@ -67,7 +64,6 @@ MODULE project
 
     !print average dipole differences vector
     WRITE(*,*)
-    WRITE(*,*) "Number of adiabatic transfers:",ntrans
     WRITE(*,*) "Average adiabat dipole differences vector:"
     WRITE(*,'(2x,A2,999(F15.10))') "X:", udiff(0)
     WRITE(*,'(2x,A2,999(F15.10))') "Y:", udiff(1)
