@@ -68,8 +68,8 @@ MODULE coupling
     WRITE(*,*)
     WRITE(*,*) "Diagonalizing dipole matrix to μab = 0"
     !CALL diag_mat(nstates,u_mat,S_mat) !LAPACK full diagonalization
-    CALL diag_mat(nstates,A,S_mat) !LAPACK full diagonalization
-    !CALL block_diag(nstates,one,A,S_mat,info)
+    !CALL diag_mat(nstates,A,S_mat) !LAPACK full diagonalization
+    CALL block_diag(nstates,one,A,S_mat,info)
     IF (info .NE. 0) THEN
       flag = .TRUE.
       RETURN
@@ -84,7 +84,7 @@ MODULE coupling
     DO i=0,nstates-1
       WRITE(*,'(999(F15.10))') S_mat(i,0:nstates-1)
     END DO
-    
+
     !2) Use transform matrix to get fully diabatic hamiltonian
     CALL linal_xy_2Dreal8(nstates,nstates,nstates,dummy,S_mat,int_mat) 
     CALL linal_xy_2Dreal8(nstates,nstates,nstates,TRANSPOSE(S_mat),int_mat,Hab) 
