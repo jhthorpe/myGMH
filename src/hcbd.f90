@@ -19,6 +19,8 @@ MODULE hcbd
 !	- very poorly coded, but it will do for small matrices
 !	- based off algorithms described in Numerical Recipies
 !	- uses upper triangular form
+!	- standardizes all eigenvectors to have their largest value
+!         as positive
 !---------------------------------------------------------------------
 ! Variables
 ! n		: int, size of matrix
@@ -65,6 +67,13 @@ MODULE hcbd
       DO j=i+1,n-1
         A(j,i) = A(i,j)
       END DO
+    END DO
+
+    !Standardize the eigenvectors
+    DO i=0,n-1
+      IF (MAXVAL(V(0:n-1,i)) .LT. 0) THEN
+        V(0:n-1,i) = -1.0D0*V(0:n-1,i)
+      END IF
     END DO
 
     IF (conv .LT. tol) THEN
@@ -194,8 +203,6 @@ MODULE hcbd
           DO r=0,n-1
             g = V(r,p)
             h = V(r,q)
-            !g = V(r,q)
-            !h = V(r,p)
             V(r,p) = g - s*(h + ta*g) 
             V(r,q) = h + s*(g - ta*h)
           END DO
