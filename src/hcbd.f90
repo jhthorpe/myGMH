@@ -71,9 +71,8 @@ MODULE hcbd
 
     !Standardize the eigenvectors
     DO i=0,n-1
-      IF (MAXVAL(V(0:n-1,i)) .LT. 0) THEN
-        V(0:n-1,i) = -1.0D0*V(0:n-1,i)
-      END IF
+      j = MAXLOC(ABS(V(0:n-1,i)),1)-1
+      IF (V(j,i) .LT. 0) V(0:n-1,i) = -1.0D0*V(0:n-1,i)
     END DO
 
     IF (conv .LT. tol) THEN

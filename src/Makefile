@@ -1,8 +1,7 @@
 #hipergator
 #export FC = ifort
 #export FFLAGS = -O3
-#export LINAL =
-#export MKL = /apps/compilers/intel/2018/1.163/compilers_and_libraries_2018.1.163/linux/mkl/lib/intel64_lin
+#export LINAL = /apps/compilers/intel/2018/1.163/compilers_and_libraries_2018.1.163/linux/mkl/lib/intel64_lin
 
 #local
 export FC = gfortran
@@ -15,6 +14,7 @@ export bindir = ../bin
 objects = gmh.o input.o project.o coupling.o hcbd.o
 
 all: $(objects)
+	if [ ! -d $(bindir) ]; then mkdir -p $(bindir); fi
 	cp gmh.o $(bindir)/gmh
 
 hcbd.o : hcbd.f90
