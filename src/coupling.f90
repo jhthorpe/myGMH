@@ -108,7 +108,8 @@ MODULE coupling
     WRITE(*,*) 
     WRITE(*,*) "GMH (locally-adiabatic) Diabatic Hamiltonian"
     DO i=0,n-1
-      WRITE(*,'(999(F15.10))') Hab(i,0:n-1)
+     ! WRITE(*,'(999(F15.10))') Hab(i,0:n-1)
+     WRITE(*,*) Hab(i,0:n-1)
     END DO 
     WRITE(*,*) 
     WRITE(*,*) "Original Adiabatic Hamiltonian"

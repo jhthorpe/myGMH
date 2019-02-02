@@ -36,10 +36,12 @@ MODULE project
     !internal
     REAL(KIND=8), DIMENSION(0:2) :: udiff
     REAL(KIND=8) :: norm
-    INTEGER :: ntrans
+    INTEGER :: ntrans,ctv
     INTEGER :: i,j,k
 
     flag = .FALSE.
+
+    CALL check_ctv(ctv)
 
     !build average dipole difference
     ntrans = 0
@@ -54,12 +56,22 @@ MODULE project
     END DO 
 
     !check for special symmetric case
-    IF (MAXVAL(ABS(udiff)) .LT. 1.0D-16) THEN
+    IF (MAXVAL(ABS(udiff)) .LT. 1.0D-16 .AND. ctv .NE. 1) THEN
       WRITE(*,*)
       WRITE(*,*) "You have a truely symmetric system..."
       WRITE(*,*) "Using transition moments as the effective vector"
       udiff = 0.0D0
       ntrans = 0
+      DO i=0,nstates-1
+        DO j=0,i-1
+          ntrans = ntrans + 1
+          udiff(0) = udiff(0) + dipoles(i,j,0)
+          udiff(1) = udiff(1) + dipoles(i,j,1)
+          udiff(2) = udiff(2) + dipoles(i,j,2)
+        END DO
+      END DO 
+    !check for my alternate scheme
+    ELSE IF (ctv .EQ. 1) THEN
       DO i=0,nstates-1
         DO j=0,i-1
           ntrans = ntrans + 1
@@ -110,5 +122,63 @@ MODULE project
 
   END FUNCTION scalar_proj
 !---------------------------------------------------------------------
+!	check_ctv
+!		James H. Thorpe
+!	-checks for the %ctv keyword, which can be used to control
+!	the scheme for the projection of the charge transfer vector
+!---------------------------------------------------------------------
+  SUBROUTINE check_ctv(ctv)
+    IMPLICIT NONE
+    !inout
+    INTEGER, INTENT(INOUT) :: ctv
+    !internal
+    INTEGER :: fline, exitval
+    LOGICAL :: flag
+
+    CALL EXECUTE_COMMAND_LINE('grep -q \%cvt gmh.data',.TRUE.,exitval) 
+
+    IF (exitval .EQ. 0) THEN
+      WRITE(*,*) 
+      WRITE(*,*) "WARNING"
+      WRITE(*,*) "Using average of dipole differences and"
+      WRITE(*,*) "transition dipoles as charge transfer vector." 
+      WRITE(*,*)
+      WRITE(*,*) "This has not been tested or published..."
+      WRITE(*,*) "be very very careful."
+      ctv = 1
+    ELSE
+      ctv = 0
+    END IF 
+    
+  END SUBROUTINE check_ctv
+!------------------------------------------------------------------
+!               Check if file exists and get number of lines    
+!------------------------------------------------------------------
+  SUBROUTINE getfline(flag,fline)
+    IMPLICIT NONE
+    !Inout
+    INTEGER, INTENT(INOUT) :: fline
+    LOGICAL, INTENT(INOUT) :: flag
+    !Internal
+    INTEGER :: io
+    LOGICAL :: ex
+    flag = .FALSE.
+    INQUIRE(file='gmh.data',EXIST=ex)
+    IF (.NOT. ex) THEN
+      flag = .TRUE.
+      fline = -1
+      RETURN
+    END IF
+    fline = 0
+    io = 0
+    OPEN(unit=1,file='gmh.data',status='old',access='sequential')
+    DO WHILE (io .EQ. 0)
+      READ(1,*,iostat=io)
+      IF (io .EQ. 0) fline = fline + 1
+    END DO
+    CLOSE(unit=1)
+  END SUBROUTINE getfline
+!------------------------------------------------------------------
+
 
 END MODULE project
