@@ -166,9 +166,10 @@ MODULE coupling
     INFO = 0
     A = mat
 
+    WRITE(*,*) "WARNING, DIAGONALIZATION HAS BEEN SILENCED"
     !diagonalize
     !CALL DSYEV('V','U',n,A(0:n-1,0:n-1),n,W,WORK(0:LWORK-1),LWORK,INFO)
-    CALL DSYEV('V','L',n,A(0:n-1,0:n-1),n,W,WORK(0:LWORK-1),LWORK,INFO)
+    !CALL DSYEV('V','L',n,A(0:n-1,0:n-1),n,W,WORK(0:LWORK-1),LWORK,INFO)
     dummy = 0
     WRITE(*,*)
     WRITE(*,*) "Eigenvalues matrix:"
@@ -236,11 +237,13 @@ MODULE coupling
 
     A = mat
     WORK = 0
+   
+    WRITE(*,*) "WARNING - INVERSION HAS BEEN SILENCED"
 
     !1) get LU decomposition of matrix
-    CALL DGETRF(n,n,A(0:n-1,0:n-1),n,IPIV(0:n-1),INFO)
+    !CALL DGETRF(n,n,A(0:n-1,0:n-1),n,IPIV(0:n-1),INFO)
     !2) invert 
-    CALL DGETRI(n,A(0:n-1,0:n-1),n,IPIV(0:n-1),WORK,LWORK,INFO) 
+    !CALL DGETRI(n,A(0:n-1,0:n-1),n,IPIV(0:n-1),WORK,LWORK,INFO) 
  
     imat = A
    
@@ -270,8 +273,8 @@ MODULE coupling
     INTEGER, INTENT(IN) :: n1,n2,n3
 
     Z = 0.0D0
-    CALL DGEMM('T','N',n1,n2,n3,1.0D0,X(0:n3-1,0:n1-1),n3,&
-            Y(0:n3-1,0:n2-1),n3,0.0D0,Z(0:n1-1,0:n2-1),n1)
+!    CALL DGEMM('T','N',n1,n2,n3,1.0D0,X(0:n3-1,0:n1-1),n3,&
+!            Y(0:n3-1,0:n2-1),n3,0.0D0,Z(0:n1-1,0:n2-1),n1)
 
   END SUBROUTINE linal_xTy_2Dreal8
 
@@ -281,6 +284,7 @@ MODULE coupling
 !               Dec 9, 2018
 !       -matrix multiplication using BLAS  
 !       -performs Z = X.Y
+!	-hand-coded, now, so we don't need BLAS/LAPACK for anything
 !---------------------------------------------------------------------
   ! n1          : int, number of rows of X
   ! n2          : int, number of cols of Y
@@ -293,10 +297,19 @@ MODULE coupling
     REAL(KIND=8), DIMENSION(0:,0:), INTENT(INOUT) :: Z
     REAL(KIND=8), DIMENSION(0:,0:), INTENT(IN) :: X,Y
     INTEGER, INTENT(IN) :: n1,n2,n3
+    INTEGER :: i,j,k
 
     Z = 0.0D0
-    CALL DGEMM('N','N',n1,n2,n3,1.0D0,X(0:n1-1,0:n3-1),n1,&
-            Y(0:n3-1,0:n2-1),n3,0.0D0,Z(0:n1-1,0:n2-1),n1)
+!    CALL DGEMM('N','N',n1,n2,n3,1.0D0,X(0:n1-1,0:n3-1),n1,&
+!            Y(0:n3-1,0:n2-1),n3,0.0D0,Z(0:n1-1,0:n2-1),n1)
+
+    DO i=0,n1-1
+      DO j=0,n2-1
+        DO k=0,n3-1
+          Z(i,j) = Z(i,j) + X(i,k)*Y(k,j) 
+        END DO
+      END DO
+    END DO
 
   END SUBROUTINE linal_xy_2Dreal8
 !---------------------------------------------------------------------

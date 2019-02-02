@@ -46,17 +46,16 @@ MODULE project
     udiff = 0
     DO i=0,nstates-2
       DO j=i+1,nstates-1
-          ntrans = ntrans + 1
-          udiff(0) = udiff(0) + dipoles(i,i,0) - dipoles(j,j,0) 
-          udiff(1) = udiff(1) + dipoles(i,i,1) - dipoles(j,j,1) 
-          udiff(2) = udiff(2) + dipoles(i,i,2) - dipoles(j,j,2) 
-          !udiff(0) = udiff(0) + (dipoles(j,j,0) - dipoles(i,i,0)) 
-          !udiff(1) = udiff(1) + (dipoles(j,j,1) - dipoles(i,i,1))
-          !udiff(2) = udiff(2) + (dipoles(j,j,2) - dipoles(i,i,2))
+        ntrans = ntrans + 1
+        udiff(0) = udiff(0) + dipoles(i,i,0) - dipoles(j,j,0) 
+        udiff(1) = udiff(1) + dipoles(i,i,1) - dipoles(j,j,1) 
+        udiff(2) = udiff(2) + dipoles(i,i,2) - dipoles(j,j,2) 
       END DO
     END DO 
 
+    !check for special symmetric case
     IF (MAXVAL(ABS(udiff)) .LT. 1.0D-16) THEN
+      WRITE(*,*)
       WRITE(*,*) "You have a truely symmetric system..."
       WRITE(*,*) "Using transition moments as the effective vector"
       udiff = 0.0D0
@@ -86,9 +85,6 @@ MODULE project
       END DO
     END DO
     
-    !kill off states from diab_mat - This is now handled in the diagonalization
-    !u_mat = u_mat * diab_mat
-
     WRITE(*,*) 
     WRITE(*,*) "Dipoles projected on <Δμ12> :" 
     DO i=0,nstates-1 

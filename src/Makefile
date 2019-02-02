@@ -1,12 +1,7 @@
-#hipergator
-#export FC = ifort
-#export FFLAGS = -O3
-#export LINAL = /apps/compilers/intel/2018/1.163/compilers_and_libraries_2018.1.163/linux/mkl/lib/intel64_lin
-
 #local
 export FC = gfortran
 export FFLAGS = -O3
-export LINAL = -L/Users/jamesthorpe/LAPACK/lapack-3.7.0 -llapack -lblas
+#export LINAL = -L/Users/jamesthorpe/LAPACK/lapack-3.7.0 -llapack -lblas
 
 #both
 export bindir = ../bin
