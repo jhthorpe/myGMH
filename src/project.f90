@@ -35,6 +35,7 @@ MODULE project
     INTEGER, INTENT(IN) :: nstates
     !internal
     REAL(KIND=8), DIMENSION(0:2) :: udiff
+    REAL(KIND=8) :: norm
     INTEGER :: ntrans
     INTEGER :: i,j,k
 
@@ -54,13 +55,23 @@ MODULE project
           !udiff(2) = udiff(2) + (dipoles(j,j,2) - dipoles(i,i,2))
       END DO
     END DO 
-    udiff  = udiff/(1.0D0*ntrans)
 
     IF (MAXVAL(ABS(udiff)) .LT. 1.0D-16) THEN
-      WRITE(*,*) "average adiabat dipole differences vector is 0"
-      flag = .TRUE.  
-      RETURN
+      WRITE(*,*) "You have a truely symmetric system..."
+      WRITE(*,*) "Using transition moments as the effective vector"
+      udiff = 0.0D0
+      ntrans = 0
+      DO i=0,nstates-1
+        DO j=0,i-1
+          ntrans = ntrans + 1
+          udiff(0) = udiff(0) + dipoles(i,j,0)
+          udiff(1) = udiff(1) + dipoles(i,j,1)
+          udiff(2) = udiff(2) + dipoles(i,j,2)
+        END DO
+      END DO 
     END IF
+
+    udiff  = udiff/(1.0D0*ntrans)
 
     !print average dipole differences vector
     WRITE(*,*)
@@ -100,7 +111,7 @@ MODULE project
     temp = a(0)*b(0)+a(1)*b(1)+a(2)*b(2)
     temp = temp / bnorm
     scalar_proj = temp
-     
+
   END FUNCTION scalar_proj
 !---------------------------------------------------------------------
 
